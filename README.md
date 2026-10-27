@@ -23,7 +23,35 @@ remembers, it first *finds* the relevant pages in the reports and then makes the
 
 ## Results
 
-_Evaluation results coming soon (see `eval/`)._
+Measured on 42 questions about the three reports ([`eval/questions.json`](eval/questions.json)),
+each with the page numbers where the answer is printed. Index: 564 pages → 1,718 chunks.
+
+**Retrieval hit@6**: how often the right page is in the 6 chunks given to the LLM.
+
+| Search mode | Hit rate |
+|---|---|
+| BM25 (keyword search) | 59% |
+| Vector search (embeddings) | 69% |
+| Hybrid (BM25 + vector, RRF) | 74% |
+| **Hybrid + cross-encoder re-ranker** | **82%** |
+
+Each step helps: keyword and vector search find different pages, fusing them beats either one,
+and the re-ranker puts the best of the fused candidates on top.
+
+**PDF extraction** (hybrid + re-ranker)
+
+| Method | Hit rate |
+|---|---|
+| Plain `get_text()` | 82% |
+| Rebuilt table rows | 82% |
+
+Rebuilding table rows does **not** change which page is found: the page has the right words
+either way. What it changes is what the LLM *reads*. With plain extraction, `130,497` sits on its
+own line with no "Revenue" label nearby; with rebuilt rows the label and the numbers stay together.
+Measuring that needs the answer-level evaluation (`python -m eval.run_eval --llm`), which is not
+reported here yet.
+
+Reproduce with `python -m eval.run_eval --compare-extraction`.
 
 ## How it works
 
